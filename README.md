@@ -1,6 +1,6 @@
 Small fun project, with my first functional interpreter (simple tree walker)
 
-Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), and parenthesized expressions
+Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), parenthesized expressions and constants - `e`, `pi`, `tau`
 
 Quirk: no unary operators -> so instead of `-(2 + 2)` do `-1 * (2 + 2)` (no space after the `-`)
 

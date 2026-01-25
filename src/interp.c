@@ -11,7 +11,7 @@ static const char *current_expr;
 static Token current_token;
 static jmp_buf out_error;
 
-double num_to_tok() {
+void num_to_tok() {
 	int num_begin = cursor;
 	while ((current_expr[cursor] >= '0' &&
 		current_expr[cursor] <= '9') ||
@@ -20,7 +20,25 @@ double num_to_tok() {
 		cursor++;
 	}
 	char *end = (char *)&current_expr[cursor - 1];
-	return SDL_strtod(&current_expr[num_begin], &end);
+	current_token.type = TOK_CONSTANT;
+	current_token.value = SDL_strtod(&current_expr[num_begin], &end);
+}
+
+void ident_to_tok() {
+	int ident_len = 0;
+	while ((current_expr[cursor] >= 'a' &&
+		current_expr[cursor] <= 'z') ||
+	       (current_expr[cursor] >= 'A' &&
+		current_expr[cursor] <= 'Z')) {
+
+		current_token.ident[ident_len] = current_expr[cursor];
+		ident_len++;
+		if (ident_len >= 32)
+			longjmp(out_error, 1);
+		cursor++;
+	}
+	current_token.type = TOK_IDENT;
+	current_token.ident[ident_len] = 0;
 }
 
 void next_token() {
@@ -33,21 +51,14 @@ again:
 	case '\n':
 		cursor++;
 		goto again;
-	case 'x':
-		current_token = (Token) {
-			.type = TOK_IDENT,
-			.ident[0] = c,
-			.ident[1] = 0,
-		};
-		cursor++;
+	case 'a' ... 'z':
+	case 'A' ... 'Z':
+		ident_to_tok();
 		break;
 	case '-':
 		if (current_expr[cursor + 1] >= '0' &&
 		    current_expr[cursor + 1] <= '9') {
-			current_token = (Token) {
-				.type = TOK_CONSTANT,
-				.value = num_to_tok(),
-			};
+			num_to_tok();
 			break;
 		}
 	case '+':
@@ -69,10 +80,7 @@ again:
 		};
 		break;
 	case '0' ... '9':
-		current_token = (Token) {
-			.type = TOK_CONSTANT,
-			.value = num_to_tok(),
-		};
+		num_to_tok();
 		break;
 	default:
 		current_token = (Token) {
@@ -198,12 +206,31 @@ Expr_Node *parse_expression(const char *text) {
 	return parse_subexpr(1);
 }
 
+typedef struct {
+	const char *ident;
+	double value;
+} Constant;
+
+static Constant constants[] = {
+	{ "e", 2.71828182 },
+	{ "pi", 3.14159265 },
+	{ "tau", 6.28318530 },
+};
+static const int constant_count = sizeof(constants) / sizeof(Constant);
+
 double eval_expr(Expr_Node *expr, double x) {
 	if (expr->type == NODE_CONSTANT) {
 		return expr->value;
 	} else if (expr->type == NODE_IDENT) {
 		if (!SDL_strcmp("x", expr->ident)) {
 			return x;
+		} else {
+			for (int i = 0; i < constant_count; i++) {
+				Constant c = constants[i];
+				if (!SDL_strcmp(c.ident, expr->ident)) {
+					return c.value;
+				}
+			}
 		}
 	} else if (expr->type == NODE_BINOP) {
 		switch ((int) expr->binop.op) {
