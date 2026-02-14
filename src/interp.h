@@ -21,6 +21,7 @@ typedef enum {
 	NODE_BINOP,
 	NODE_CONSTANT,
 	NODE_IDENT,
+	NODE_FUNCALL,
 } Node_Type;
 
 typedef struct Expr_Node {
@@ -31,6 +32,11 @@ typedef struct Expr_Node {
 			struct Expr_Node *left;
 			struct Expr_Node *right;
 		} binop;
+		struct {
+			struct Expr_Node *args[12];
+			int arg_count;
+			char ident[32];
+		} funcall;
 		double value;
 		char ident[32];
 	};

@@ -28,7 +28,7 @@ void ident_to_tok() {
 	int ident_len = 0;
 	while ((current_expr[cursor] >= 'a' &&
 		current_expr[cursor] <= 'z') ||
-	       (current_expr[cursor] >= 'A' &&
+		(current_expr[cursor] >= 'A' &&
 		current_expr[cursor] <= 'Z')) {
 
 		current_token.ident[ident_len] = current_expr[cursor];
@@ -69,6 +69,7 @@ again:
 	case '<': // Max
 	case '(':
 	case ')':
+	case ',': // For function calls
 		current_token = (Token) {
 			.type = c,
 		};
@@ -134,14 +135,40 @@ Expr_Node *new_ident(Token *tok) {
 
 Expr_Node *parse_subexpr(int min_prec);
 
+Expr_Node *parse_funcall(Token *ident_tok) {
+	// We are at the beginning of the funcall (at the '(')
+
+	Expr_Node *result = new_node();
+	result->type = NODE_FUNCALL;
+	memcpy(result->funcall.ident, ident_tok->ident, 32);
+	int arg_count = 0;
+
+	// Start parsing the passed args
+	do {
+		next_token();
+		result->funcall.args[arg_count] = parse_subexpr(1);
+		arg_count++;
+		if (arg_count >= 12)
+			longjmp(out_error, 1);
+	} while (current_token.type == ',');
+	result->funcall.arg_count = arg_count;
+	return result;
+}
+
 Expr_Node *parse_primary() {
 	Expr_Node *result = 0;
 	if (current_token.type == TOK_CONSTANT) {
 		result = new_constant(current_token.value);
 		next_token();
 	} else if (current_token.type == TOK_IDENT) {
-		result = new_ident(&current_token);
+		Token ident_token = current_token;
 		next_token();
+		if (current_token.type == '(') {
+			result = parse_funcall(&ident_token);
+			expect(')');
+		} else {
+			result = new_ident(&ident_token);
+		}
 	} else if (current_token.type == '(') {
 		next_token();
 		result = parse_subexpr(1);
@@ -218,7 +245,6 @@ static Constant constants[] = {
 };
 static const int constant_count = sizeof(constants) / sizeof(Constant);
 
-
 static double current_x;
 
 double eval_expr_real(Expr_Node *expr) {
@@ -252,6 +278,19 @@ double eval_expr_real(Expr_Node *expr) {
 		case '<':
 			return SDL_max(eval_expr_real(expr->binop.left), eval_expr_real(expr->binop.right));
 		default:
+			return 0;
+		}
+	} else if (expr->type == NODE_FUNCALL) {
+		int arg_count = expr->funcall.arg_count;
+		if (!SDL_strcmp(expr->funcall.ident, "min") && arg_count == 2) {
+			return SDL_min(eval_expr_real(expr->funcall.args[0]), eval_expr_real(expr->funcall.args[1]));
+		} else if (!SDL_strcmp(expr->funcall.ident, "max") && arg_count == 2) {
+			return SDL_max(eval_expr_real(expr->funcall.args[0]), eval_expr_real(expr->funcall.args[1]));
+		} else if (!SDL_strcmp(expr->funcall.ident, "sin") && arg_count == 1) {
+			return SDL_sin(eval_expr_real(expr->funcall.args[0]));
+		} else if (!SDL_strcmp(expr->funcall.ident, "cos") && arg_count == 1) {
+			return SDL_cos(eval_expr_real(expr->funcall.args[0]));
+		} else {
 			return 0;
 		}
 	}
