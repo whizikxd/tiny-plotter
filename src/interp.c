@@ -218,12 +218,15 @@ static Constant constants[] = {
 };
 static const int constant_count = sizeof(constants) / sizeof(Constant);
 
-double eval_expr(Expr_Node *expr, double x) {
+
+static double current_x;
+
+double eval_expr_real(Expr_Node *expr) {
 	if (expr->type == NODE_CONSTANT) {
 		return expr->value;
 	} else if (expr->type == NODE_IDENT) {
 		if (!SDL_strcmp("x", expr->ident)) {
-			return x;
+			return current_x;
 		} else {
 			for (int i = 0; i < constant_count; i++) {
 				Constant c = constants[i];
@@ -235,23 +238,29 @@ double eval_expr(Expr_Node *expr, double x) {
 	} else if (expr->type == NODE_BINOP) {
 		switch ((int) expr->binop.op) {
 		case '+':
-			return eval_expr(expr->binop.left, x) + eval_expr(expr->binop.right, x);
+			return eval_expr_real(expr->binop.left) + eval_expr_real(expr->binop.right);
 		case '-':
-			return eval_expr(expr->binop.left, x) - eval_expr(expr->binop.right, x);
+			return eval_expr_real(expr->binop.left) - eval_expr_real(expr->binop.right);
 		case '/':
-			return eval_expr(expr->binop.left, x) / eval_expr(expr->binop.right, x);
+			return eval_expr_real(expr->binop.left) / eval_expr_real(expr->binop.right);
 		case '*':
-			return eval_expr(expr->binop.left, x) * eval_expr(expr->binop.right, x);
+			return eval_expr_real(expr->binop.left) * eval_expr_real(expr->binop.right);
 		case '^':
-			return SDL_pow(eval_expr(expr->binop.left, x), eval_expr(expr->binop.right, x));
+			return SDL_pow(eval_expr_real(expr->binop.left), eval_expr_real(expr->binop.right));
 		case '>':
-			return SDL_min(eval_expr(expr->binop.left, x), eval_expr(expr->binop.right, x));
+			return SDL_min(eval_expr_real(expr->binop.left), eval_expr_real(expr->binop.right));
 		case '<':
-			return SDL_max(eval_expr(expr->binop.left, x), eval_expr(expr->binop.right, x));
+			return SDL_max(eval_expr_real(expr->binop.left), eval_expr_real(expr->binop.right));
 		default:
 			return 0;
 		}
 	}
 	return 0;
 }
+
+double eval_expr(Expr_Node *expr, double x) {
+	current_x = x;
+	return eval_expr_real(expr);
+}
+
 
