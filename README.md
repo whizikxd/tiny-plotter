@@ -1,12 +1,10 @@
 Small fun project, with my first functional interpreter (simple tree walker)
 
-Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), parenthesized expressions and constants - `e`, `pi`, `tau`
-
-Quirk: no unary operators -> so instead of `-(2 + 2)` do `-1 * (2 + 2)` (no space after the `-`)
+Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), parenthesized expressions and constants - `e`, `pi`, `tau`, functions - `sin`, `cos`, `min`, `max` and unary `-`
 
 Usage example:
 
-`./plot "x * 0.5"`
+`./plot "sin(x) * -(0.5 * x)"`
 
 Range can be specified by using `-x` and `-y` flags
 
