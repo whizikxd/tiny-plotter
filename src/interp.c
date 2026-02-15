@@ -288,14 +288,18 @@ double eval_expr_real(Expr_Node *expr) {
 		}
 	} else if (expr->type == NODE_FUNCALL) {
 		int arg_count = expr->funcall.arg_count;
-		if (!SDL_strcmp(expr->funcall.ident, "min") && arg_count == 2) {
+		char *ident = expr->funcall.ident;
+
+		if (!SDL_strcmp(ident, "min") && arg_count == 2) {
 			return SDL_min(eval_expr_real(expr->funcall.args[0]), eval_expr_real(expr->funcall.args[1]));
-		} else if (!SDL_strcmp(expr->funcall.ident, "max") && arg_count == 2) {
+		} else if (!SDL_strcmp(ident, "max") && arg_count == 2) {
 			return SDL_max(eval_expr_real(expr->funcall.args[0]), eval_expr_real(expr->funcall.args[1]));
-		} else if (!SDL_strcmp(expr->funcall.ident, "sin") && arg_count == 1) {
+		} else if (!SDL_strcmp(ident, "sin") && arg_count == 1) {
 			return SDL_sin(eval_expr_real(expr->funcall.args[0]));
-		} else if (!SDL_strcmp(expr->funcall.ident, "cos") && arg_count == 1) {
+		} else if (!SDL_strcmp(ident, "cos") && arg_count == 1) {
 			return SDL_cos(eval_expr_real(expr->funcall.args[0]));
+		} else if (!SDL_strcmp(ident, "tan") && arg_count == 1) {
+			return SDL_tan(eval_expr_real(expr->funcall.args[0]));
 		} else {
 			return 0;
 		}

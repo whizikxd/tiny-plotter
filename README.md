@@ -1,6 +1,6 @@
 Small fun project, with my first functional interpreter (simple tree walker)
 
-Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), parenthesized expressions and constants - `e`, `pi`, `tau`, functions - `sin`, `cos`, `min`, `max` and unary `-`
+Supports `+`, `-`, `/`, `*`, `^` (pow), `<` (max), `>` (min), parenthesized expressions and constants - `e`, `pi`, `tau`, functions - `sin`, `cos`, `tan`, `min`, `max` and unary `-`
 
 Usage example:
 
