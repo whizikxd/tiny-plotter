@@ -56,11 +56,6 @@ again:
 		ident_to_tok();
 		break;
 	case '-':
-		if (current_expr[cursor + 1] >= '0' &&
-		    current_expr[cursor + 1] <= '9') {
-			num_to_tok();
-			break;
-		}
 	case '+':
 	case '/':
 	case '*':
@@ -114,6 +109,14 @@ Expr_Node *new_constant(double value) {
 	Expr_Node *n = new_node();
 	n->type = NODE_CONSTANT;
 	n->value = value;
+	return n;
+}
+
+Expr_Node *new_unary(Token_Type op, Expr_Node *child) {
+	Expr_Node *n = new_node();
+	n->type = NODE_UNOP;
+	n->unop.op = op;
+	n->unop.child = child;
 	return n;
 }
 
@@ -173,6 +176,9 @@ Expr_Node *parse_primary() {
 		next_token();
 		result = parse_subexpr(1);
 		expect(')');
+	} else if (current_token.type == '-') {
+		next_token();
+		result = new_unary('-', parse_primary());
 	} else {
 		longjmp(out_error, 1);
 	}
@@ -292,6 +298,13 @@ double eval_expr_real(Expr_Node *expr) {
 			return SDL_cos(eval_expr_real(expr->funcall.args[0]));
 		} else {
 			return 0;
+		}
+	} else if (expr->type == NODE_UNOP) {
+		switch ((int) expr->unop.op) {
+			case '-':
+				return -eval_expr_real(expr->unop.child);
+			default:
+				return 0;
 		}
 	}
 	return 0;

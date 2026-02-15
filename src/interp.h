@@ -19,6 +19,7 @@ typedef struct {
 
 typedef enum {
 	NODE_BINOP,
+	NODE_UNOP,
 	NODE_CONSTANT,
 	NODE_IDENT,
 	NODE_FUNCALL,
@@ -27,6 +28,10 @@ typedef enum {
 typedef struct Expr_Node {
 	Node_Type type;
 	union {
+		struct {
+			Token_Type op;
+			struct Expr_Node *child;
+		} unop;
 		struct {
 			Token_Type op;
 			struct Expr_Node *left;
